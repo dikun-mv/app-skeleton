@@ -1,0 +1,24 @@
+{
+  "name": "app-skeleton",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:dikun-mv/app-skeleton.git",
+  "author": "Maxim Dikun <dikun.mv@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development webpack-dev-server --config webpack/config.dev.js"
+  },
+  "dependencies": {
+    "@tensorflow-models/posenet": "^0.0.1",
+    "@tensorflow/tfjs": "^0.11.2",
+    "axios": "^0.18.0",
+    "stats.js": "^0.17.0"
+  },
+  "devDependencies": {
+    "cross-env": "^5.1.6",
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.4",
+    "webpack-dev-server": "^3.1.4"
+  }
+}
