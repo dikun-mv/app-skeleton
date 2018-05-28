@@ -1,0 +1,11 @@
+{
+  "posenetVersion": 1.01,
+  "imageScaleFactor": 0.5,
+  "outputStride": 16,
+  "minPoseScore": 0.1,
+  "minPartScore": 0.5,
+  "frameSize": {
+    "width": 480,
+    "height": 270
+  }
+}
