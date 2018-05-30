@@ -10,22 +10,27 @@ export async function captureWebcam(size) {
   return video;
 }
 
+function partToColor(part) {
+  const map = {
+    'rightWrist': '#ff0000',
+    'leftWrist': '#0000ff',
+  };
+
+  return map[part] || '#00ff00';
+}
+
 export function drawFrame(ctx, frame, size) {
   ctx.clearRect(0, 0, size.width, size.height);
-  ctx.save();
-  ctx.scale(-1, 1);
-  ctx.translate(-size.width, 0);
   ctx.drawImage(frame, 0, 0, size.width, size.height);
-  ctx.restore();
 }
 
 export function drawKeypoints(ctx, keypoints, minScore, scale) {
-  for (const { score, position } of keypoints) {
+  for (const { score, position, part } of keypoints) {
     if (score < minScore) continue;
 
     ctx.beginPath();
-    ctx.arc(position.x * scale.x, position.y * scale.y, 3, 0, 2 * Math.PI);
-    ctx.fillStyle = 'red';
+    ctx.arc(position.x * scale.x, position.y * scale.y, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = partToColor(part)
     ctx.fill();
   }
 }

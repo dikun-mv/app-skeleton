@@ -1,11 +1,13 @@
 {
   "posenetVersion": 1.01,
-  "imageScaleFactor": 0.5,
+  "imageScaleFactor": 1.0,
   "outputStride": 16,
-  "minPoseScore": 0.1,
+  "minPoseScore": 0.2,
   "minPartScore": 0.5,
+  "maxPoseDetections": 2,
+  "nmsRadius": 20.0,
   "frameSize": {
-    "width": 480,
-    "height": 270
+    "width": 485,
+    "height": 275
   }
 }

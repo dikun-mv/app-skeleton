@@ -16,11 +16,31 @@
       padding: 0;
       overflow: hidden;
     }
+
+    .box {
+      display: none;
+      position: fixed;
+      width: 200px;
+      height: 200px;
+      bottom: 0;
+    }
+
+    #left {
+      left: 0;
+      background: #0000ff;
+    }
+
+    #right {
+      right: 0;
+      background: #ff0000;
+    }
   </style>
 </head>
 
 <body>
   <canvas id="output"></canvas>
+  <div class="box" id="left"></div>
+  <div class="box" id="right"></div>
 </body>
 
 </html>

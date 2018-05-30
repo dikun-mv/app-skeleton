@@ -13,6 +13,8 @@ async function main() {
       outputStride,
       minPoseScore,
       minPartScore,
+      maxPoseDetections,
+      nmsRadius,
       frameSize
     }
   } = await axios.get('./config.json');
@@ -42,9 +44,22 @@ async function main() {
   ocanvas.height = viewportSize.height;
   const octx = ocanvas.getContext('2d');
 
+  octx.scale(-1, 1);
+  octx.translate(-viewportSize.width, 0);
+
   const stats = new Stats();
   stats.showPanel(0);
   document.body.appendChild(stats.dom);
+
+  const leftBox = document.getElementById('left');
+  leftBox.addEventListener('show', () => leftBox.style.display = 'block');
+  leftBox.addEventListener('hide', () => leftBox.style.display = 'none');
+
+  const rightBox = document.getElementById('right');
+  rightBox.addEventListener('show', () => rightBox.style.display = 'block');
+  rightBox.addEventListener('hide', () => rightBox.style.display = 'none');
+
+  let counter = 0;
 
   while (true) {
     await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -52,13 +67,35 @@ async function main() {
     stats.begin();
 
     drawFrame(ictx, video, frameSize);
-    const { score, keypoints } = await network.estimateSinglePose(icanvas, imageScaleFactor, false, outputStride);
+    const poses = await network.estimateMultiplePoses(
+      icanvas, imageScaleFactor, false, outputStride, maxPoseDetections, minPartScore, nmsRadius
+    );
     drawFrame(octx, video, viewportSize);
 
-    if (score < minPoseScore) continue;
+    for (const { score, keypoints } of poses) {
+      if (score < minPoseScore) continue;
 
-    drawKeypoints(octx, keypoints, minPartScore, scaleRate);
-    drawSkeleton(octx, keypoints, minPartScore, scaleRate);
+      const points = keypoints.slice(5, 11);
+
+      if (counter % 2 === 0) {
+        const L = [
+          (points[4].position.x - points[0].position.x) / -frameSize.width,
+          (points[4].position.y - points[0].position.y) / -frameSize.height
+        ];
+
+        const R = [
+          (points[5].position.x - points[1].position.x) / -frameSize.width,
+          (points[5].position.y - points[1].position.y) / -frameSize.height
+        ];
+
+        leftBox.dispatchEvent(new Event(L[1] > 0 ? 'show' : 'hide'));
+        rightBox.dispatchEvent(new Event(R[1] > 0 ? 'show' : 'hide'));
+      }
+
+      drawKeypoints(octx, points, minPartScore, scaleRate);
+    }
+
+    counter += 1;
 
     stats.end();
   }
