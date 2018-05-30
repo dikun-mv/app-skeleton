@@ -51,13 +51,15 @@ async function main() {
   stats.showPanel(0);
   document.body.appendChild(stats.dom);
 
-  const leftBox = document.getElementById('left');
-  leftBox.addEventListener('show', () => leftBox.style.display = 'block');
-  leftBox.addEventListener('hide', () => leftBox.style.display = 'none');
+  const box = document.getElementById('box');
+  box.addEventListener('show', ({ detail: { type } }) => {
+    if (!box.style.display) {
+      box.src = `./${type}.gif`;
+      box.style.display = 'block';
 
-  const rightBox = document.getElementById('right');
-  rightBox.addEventListener('show', () => rightBox.style.display = 'block');
-  rightBox.addEventListener('hide', () => rightBox.style.display = 'none');
+      setTimeout(() => box.style.display = '', 2000);
+    }
+  });
 
   let counter = 0;
 
@@ -88,8 +90,17 @@ async function main() {
           (points[5].position.y - points[1].position.y) / -frameSize.height
         ];
 
-        leftBox.dispatchEvent(new Event(L[1] > 0 ? 'show' : 'hide'));
-        rightBox.dispatchEvent(new Event(R[1] > 0 ? 'show' : 'hide'));
+        if (L[1] > 0 && R[1] > 0) continue;
+
+        if (L[1] > 0) {
+          box.dispatchEvent(new CustomEvent('show', { detail: { type: 'left' } }));
+          continue;
+        }
+
+        if (R[1] > 0) {
+          box.dispatchEvent(new CustomEvent('show', { detail: { type: 'right' } }));
+          continue;
+        }
       }
 
       drawKeypoints(octx, points, minPartScore, scaleRate);
