@@ -53,12 +53,13 @@ async function main() {
 
   const box = document.getElementById('box');
   box.addEventListener('show', ({ detail: { type } }) => {
-    if (!box.style.display) {
-      box.src = `./${type}.${type === 'left' ? 'jpg' : 'gif'}`;
-      box.style.display = 'block';
-
-      setTimeout(() => box.style.display = '', 2000);
-    }
+    if (box.style.display === 'block') return;
+    box.src = `./${type}.${type === 'left' ? 'jpg' : 'gif'}`;
+    box.style.display = 'block';
+  });
+  box.addEventListener('hide', () => {
+    if (!box.style.display) return;
+    box.style.display = '';
   });
 
   let counter = 0;
@@ -78,6 +79,7 @@ async function main() {
       if (score < minPoseScore) continue;
 
       const points = keypoints.slice(5, 11);
+      drawKeypoints(octx, points, minPartScore, scaleRate);
 
       if (counter % 2 === 0) {
         const L = [
@@ -90,20 +92,18 @@ async function main() {
           (points[5].position.y - points[1].position.y) / -frameSize.height
         ];
 
-        if (L[1] > 0 && R[1] > 0) continue;
-
-        if (L[1] > 0) {
-          box.dispatchEvent(new CustomEvent('show', { detail: { type: 'left' } }));
+        if (L[1] > 0 && R[1] > 0) {
+          box.dispatchEvent(new Event('hide'));
           continue;
         }
 
-        if (R[1] > 0) {
-          box.dispatchEvent(new CustomEvent('show', { detail: { type: 'right' } }));
+        if (L[1] > 0 || R[1] > 0) {
+          box.dispatchEvent(new CustomEvent('show', { detail: { type: L[1] > 0 ? 'left' : 'right' } }));
           continue;
         }
+
+        box.dispatchEvent(new Event('hide'));
       }
-
-      drawKeypoints(octx, points, minPartScore, scaleRate);
     }
 
     counter += 1;
