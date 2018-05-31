@@ -54,7 +54,7 @@ async function main() {
   const box = document.getElementById('box');
   box.addEventListener('show', ({ detail: { type } }) => {
     if (!box.style.display) {
-      box.src = `./${type}.gif`;
+      box.src = `./${type}.${type === 'left' ? 'jpg' : 'gif'}`;
       box.style.display = 'block';
 
       setTimeout(() => box.style.display = '', 2000);
