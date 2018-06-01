@@ -62,9 +62,7 @@ async function main() {
     box.style.display = '';
   });
 
-  let counter = 0;
-
-  while (true) {
+  mainloop: while (true) {
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
     stats.begin();
@@ -75,39 +73,39 @@ async function main() {
     );
     drawFrame(octx, video, viewportSize);
 
+    const tuples = []
+
     for (const { score, keypoints } of poses) {
       if (score < minPoseScore) continue;
 
       const points = keypoints.slice(5, 11);
       drawKeypoints(octx, points, minPartScore, scaleRate);
 
-      if (counter % 2 === 0) {
-        const L = [
+      tuples.push([
+        [
           (points[4].position.x - points[0].position.x) / -frameSize.width,
           (points[4].position.y - points[0].position.y) / -frameSize.height
-        ];
-
-        const R = [
+        ],
+        [
           (points[5].position.x - points[1].position.x) / -frameSize.width,
           (points[5].position.y - points[1].position.y) / -frameSize.height
-        ];
+        ]
+      ]);
+    }
 
-        if (L[1] > 0 && R[1] > 0) {
-          box.dispatchEvent(new Event('hide'));
-          continue;
-        }
+    for (const tuple of tuples) {
+      if (tuple[0][1] > 0 && tuple[1][1] > 0) {
+        continue;
+      }
 
-        if (L[1] > 0 || R[1] > 0) {
-          box.dispatchEvent(new CustomEvent('show', { detail: { type: L[1] > 0 ? 'left' : 'right' } }));
-          continue;
-        }
-
-        box.dispatchEvent(new Event('hide'));
+      if (tuple[0][1] > 0 || tuple[1][1] > 0) {
+        box.dispatchEvent(new CustomEvent('show', { detail: { type: tuple[0][1] > 0 ? 'left' : 'right' } }));
+        stats.end();
+        continue mainloop;
       }
     }
 
-    counter += 1;
-
+    box.dispatchEvent(new Event('hide'));
     stats.end();
   }
 }
