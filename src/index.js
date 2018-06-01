@@ -3,7 +3,7 @@ import * as posenet from '@tensorflow-models/posenet';
 import * as axios from 'axios';
 import Stats from 'stats.js';
 
-import { captureWebcam, drawFrame, drawKeypoints, drawSkeleton } from './utils';
+import { captureWebcam, loadAssets, drawFrame } from './utils';
 
 async function main() {
   const {
@@ -29,9 +29,10 @@ async function main() {
     y: viewportSize.height / frameSize.height * frameSize.height / frameSize.width
   };
 
-  const [network, video] = await Promise.all([
+  const [network, video, assets] = await Promise.all([
     posenet.load(posenetVersion),
-    captureWebcam(frameSize)
+    captureWebcam(frameSize),
+    loadAssets(['face.png', 'left.png', 'right.png'])
   ]);
 
   const icanvas = document.createElement('canvas');
@@ -51,18 +52,7 @@ async function main() {
   stats.showPanel(0);
   document.body.appendChild(stats.dom);
 
-  const box = document.getElementById('box');
-  box.addEventListener('show', ({ detail: { type } }) => {
-    if (box.style.display === 'block') return;
-    box.src = `./${type}.${type === 'left' ? 'jpg' : 'gif'}`;
-    box.style.display = 'block';
-  });
-  box.addEventListener('hide', () => {
-    if (!box.style.display) return;
-    box.style.display = '';
-  });
-
-  mainloop: while (true) {
+  while (true) {
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
     stats.begin();
@@ -73,39 +63,68 @@ async function main() {
     );
     drawFrame(octx, video, viewportSize);
 
-    const tuples = []
-
     for (const { score, keypoints } of poses) {
       if (score < minPoseScore) continue;
 
-      const points = keypoints.slice(5, 11);
-      drawKeypoints(octx, points, minPartScore, scaleRate);
+      const box = posenet.getBoundingBoxPoints(keypoints);
+      const heightRate = Math.trunc((box[2].y - box[1].y) / frameSize.height * 10) / 10;
 
-      tuples.push([
-        [
-          (points[4].position.x - points[0].position.x) / -frameSize.width,
-          (points[4].position.y - points[0].position.y) / -frameSize.height
-        ],
-        [
-          (points[5].position.x - points[1].position.x) / -frameSize.width,
-          (points[5].position.y - points[1].position.y) / -frameSize.height
-        ]
-      ]);
-    }
+      if (keypoints[0].score > minPartScore) {
+        const assetWidth = Math.trunc(150 * heightRate / 10) * 10;
+        const assetHeight = Math.trunc(150 * heightRate / 10) * 10;
 
-    for (const tuple of tuples) {
-      if (tuple[0][1] > 0 && tuple[1][1] > 0) {
-        continue;
+        octx.drawImage(
+          assets[0],
+          keypoints[0].position.x * scaleRate.x - assetWidth / 2,
+          keypoints[0].position.y * scaleRate.y - assetHeight / 2,
+          assetWidth,
+          assetHeight
+        );
       }
 
-      if (tuple[0][1] > 0 || tuple[1][1] > 0) {
-        box.dispatchEvent(new CustomEvent('show', { detail: { type: tuple[0][1] > 0 ? 'left' : 'right' } }));
-        stats.end();
-        continue mainloop;
+      if (keypoints[9].score > minPartScore) {
+        const vector = [
+          (keypoints[9].position.x - keypoints[5].position.x) / -frameSize.width,
+          (keypoints[9].position.y - keypoints[5].position.y) / -frameSize.height
+        ];
+
+        if (vector[1] > 0) {
+          const assetWidth = Math.trunc(150 * heightRate / 10) * 10;
+          const assetHeight = Math.trunc(150 * heightRate / 10) * 10;
+          const handOffset = Math.trunc(50 * heightRate / 10) * 10;
+
+          octx.drawImage(
+            assets[1],
+            keypoints[9].position.x * scaleRate.x - assetWidth / 2,
+            keypoints[9].position.y * scaleRate.y - assetHeight / 2 - handOffset,
+            assetWidth,
+            assetHeight
+          );
+        }
+      }
+
+      if (keypoints[10].score > minPartScore) {
+        const vector = [
+          (keypoints[10].position.x - keypoints[6].position.x) / -frameSize.width,
+          (keypoints[10].position.y - keypoints[6].position.y) / -frameSize.height
+        ];
+
+        if (vector[1] > 0) {
+          const assetWidth = Math.trunc(150 * heightRate / 10) * 10;
+          const assetHeight = Math.trunc(150 * heightRate / 10) * 10;
+          const handOffset = Math.trunc(50 * heightRate / 10) * 10;
+
+          octx.drawImage(
+            assets[2],
+            keypoints[10].position.x * scaleRate.x - assetWidth / 2,
+            keypoints[10].position.y * scaleRate.y - assetHeight / 2 - handOffset,
+            assetWidth,
+            assetHeight
+          );
+        }
       }
     }
 
-    box.dispatchEvent(new Event('hide'));
     stats.end();
   }
 }

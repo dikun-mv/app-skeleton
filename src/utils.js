@@ -10,6 +10,17 @@ export async function captureWebcam(size) {
   return video;
 }
 
+async function loadImage(url) {
+  const image = new Image();
+  image.src = url;
+  await new Promise((resolve) => image.onload = resolve);
+  return image;
+}
+
+export async function loadAssets(names) {
+  return Promise.all(names.map((name) => loadImage(`./assets/${name}`)));
+}
+
 function partToColor(part) {
   const map = {
     'rightWrist': '#ff0000',

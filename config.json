@@ -3,7 +3,7 @@
   "imageScaleFactor": 1.0,
   "outputStride": 16,
   "minPoseScore": 0.2,
-  "minPartScore": 0.5,
+  "minPartScore": 0.4,
   "maxPoseDetections": 2,
   "nmsRadius": 20.0,
   "frameSize": {
